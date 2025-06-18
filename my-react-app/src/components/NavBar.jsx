@@ -1,17 +1,22 @@
-import CartWidget from './CartWidget';
-import './NavBar.css';
-function NavBar(){
-    return (   <header>
-        <h1>Hamburgueseria Tisman</h1>
-        <section class="grid">
-            <div >Hamburguesas</div>
-            <div >Tragos</div>
-            <div >Loaded Fries</div>
-            <div><CartWidget/></div>
-        </section>
-    </header>
-    );
+import CartWidget from './CartWidget'
+import { Link } from 'react-router-dom'
+import './NavBar.css'
 
+function NavBar() {
+  return (
+    <header>
+      <h1>
+        <Link to="/">Hamburguesería Tisman</Link>
+      </h1>
+
+      <nav className="grid">
+        <Link className="hijo" to="/category/hamburguesas">Hamburguesas</Link>
+        <Link className="hijo" to="/category/papas">Loaded Fries</Link>
+        <Link className="hijo" to="/category/tragos">Tragos</Link>
+        <CartWidget />
+      </nav>
+    </header>
+  )
 }
 
-export default  NavBar;
+export default NavBar
