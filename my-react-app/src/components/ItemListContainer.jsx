@@ -1,46 +1,46 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react"
+import { useParams } from "react-router-dom"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { db } from "../firebase"
+import { useCart } from "../context/CartContext"
 
 function ItemListContainer() {
-  const { categoryId } = useParams();
-  const [items, setItems] = useState([]);
+  const [productos, setProductos] = useState([])
+  const { categoryId } = useParams()
+  const { addToCart } = useCart()
 
   useEffect(() => {
-    const productos = [
-      { id: "1", nombre: "Hamburguesa Clásica", categoria: "hamburguesas" },
-      { id: "2", nombre: "Loaded Fries BBQ", categoria: "papas" },
-      { id: "3", nombre: "Trago Mojito", categoria: "tragos" },
-      { id: "4", nombre: "Hamburguesa Doble", categoria: "hamburguesas" },
-    ];
+    const productosRef = collection(db, "Productos")
+    const q = categoryId
+      ? query(productosRef, where("categoria", "==", categoryId))
+      : productosRef
 
-    const promesa = new Promise((res) => {
-      setTimeout(() => {
-        if (categoryId) {
-          res(productos.filter((prod) => prod.categoria === categoryId));
-        } else {
-          res(productos);
-        }
-      }, 1000);
-    });
-
-    promesa.then((res) => setItems(res));
-  }, [categoryId]);
+    getDocs(q)
+      .then((snapshot) => {
+        const productosAdaptados = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        setProductos(productosAdaptados)
+      })
+      .catch(error => {
+        console.error("Error al obtener productos:", error)
+      })
+  }, [categoryId])
 
   return (
     <div>
-      <h2>{categoryId ? `Categoría: ${categoryId}` : "Todos los productos"}</h2>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {items.map((item) => (
-          <li key={item.id} style={{ marginBottom: "1rem" }}>
-            <h3>{item.nombre}</h3>
-            <Link to={`/item/${item.id}`}>
-              <button>Ver más detalles</button>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <h2>Productos</h2>
+      {productos.map(prod => (
+        <div key={prod.id}>
+          <h3>{prod.nombre}</h3>
+          <p>{prod.descripcion}</p>
+          <p>Precio: ${prod.precio}</p>
+          <button onClick={() => addToCart(prod, 1)}>Agregar al carrito</button>
+        </div>
+      ))}
     </div>
-  );
+  )
 }
 
-export default ItemListContainer;
+export default ItemListContainer

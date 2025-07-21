@@ -1,25 +1,34 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "../firebase"
+import { useCart } from "../context/CartContext"
+import ItemCount from "./ItemCount"
 
 function ItemDetailContainer() {
-  const { itemId } = useParams();
-  const [item, setItem] = useState(null);
+  const { itemId } = useParams()
+  const [item, setItem] = useState(null)
+  const { addToCart } = useCart()
+  const [agregado, setAgregado] = useState(false)
 
   useEffect(() => {
-    const productos = [
-      { id: "1", nombre: "Hamburguesa Clásica", descripcion: "Con cheddar y panceta" },
-      { id: "2", nombre: "Loaded Fries BBQ", descripcion: "Con cheddar, verdeo y BBQ" },
-      { id: "3", nombre: "Trago Mojito", descripcion: "Con ron y menta fresca" },
-    ];
+    const ref = doc(db, "Productos", itemId)
 
-    const promesa = new Promise((res) => {
-      setTimeout(() => {
-        res(productos.find((prod) => prod.id === itemId));
-      }, 1000);
-    });
+    getDoc(ref)
+      .then((snap) => {
+        if (snap.exists()) {
+          setItem({ id: snap.id, ...snap.data() })
+        }
+      })
+      .catch((err) => {
+        console.error("Error al obtener el producto", err)
+      })
+  }, [itemId])
 
-    promesa.then((res) => setItem(res));
-  }, [itemId]);
+  const handleAdd = (cantidad) => {
+    addToCart(item, cantidad)
+    setAgregado(true)
+  }
 
   return (
     <div>
@@ -27,12 +36,18 @@ function ItemDetailContainer() {
         <>
           <h2>{item.nombre}</h2>
           <p>{item.descripcion}</p>
+          <p>Precio: ${item.precio}</p>
+          {agregado ? (
+            <p>Producto agregado al carrito</p>
+          ) : (
+            <ItemCount stock={10} onAdd={handleAdd} />
+          )}
         </>
       ) : (
         <p>Cargando producto...</p>
       )}
     </div>
-  );
+  )
 }
 
-export default ItemDetailContainer;
+export default ItemDetailContainer
